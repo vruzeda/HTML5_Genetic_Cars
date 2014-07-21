@@ -831,6 +831,86 @@ function cw_initUserCar() {
   cw_initUserCarChassisHandlers(layer);
 
   layer.draw();
+
+  document.getElementById("serialize_user_car").onclick = cw_serializeUserCar(layer);
+  document.getElementById("deserialize_user_car").onclick = cw_deserializeUserCar(layer);
+}
+
+function cw_serializeUserCar(layer) {
+  return function() {
+    var vertex_list = [];
+    for (var i = 0; i < 8; i++) {
+      var vertex = user_car_def.vertex_list[i];
+      vertex_list.push({
+        x: vertex.x,
+        y: vertex.y
+      });
+    }
+
+    var wheels_list = [];
+    for (var i = 0; i < user_car_def.wheelCount; i++) {
+      wheels_list.push({
+        radius: user_car_def.wheel_radius[i],
+        vertex: user_car_def.wheel_vertex[i],
+        density: user_car_def.wheel_density[i]
+      })
+    }
+
+    var user_car_json = {
+      chassis_density: user_car_def.chassis_density,
+      vertex_list: vertex_list,
+      wheel_count: user_car_def.wheelCount,
+      wheels_list: wheels_list
+    }
+
+    document.getElementById("user_car_json").value = JSON.stringify(user_car_json);
+  }
+}
+
+function cw_deserializeUserCar(layer) {
+  return function() {
+    var user_car_json = JSON.parse(document.getElementById("user_car_json").value);
+
+    var vertex_list = [];
+    for (var i = 0; i < 8; i++) {
+      var vertex = user_car_json.vertex_list[i];
+      vertex_list.push(new b2Vec2(vertex.x, vertex.y));
+    }
+
+    var wheel_radius = [];
+    var wheel_vertex = [];
+    var wheel_density = [];
+    for (var i = 0; i < user_car_json.wheel_count; i++) {
+      var wheel = user_car_json.wheels_list[i];
+      wheel_radius.push(wheel.radius);
+      wheel_vertex.push(wheel.vertex);
+      wheel_density.push(wheel.density);
+    }
+
+    user_car_def = {
+      chassis_density: user_car_json.chassis_density,
+      vertex_list: vertex_list,
+      wheelCount: user_car_json.wheel_count,
+      wheel_radius: wheel_radius,
+      wheel_vertex: wheel_vertex,
+      wheel_density: wheel_density
+    }
+
+    cw_redrawUserCarWheelRadiusHandler(layer, 0);
+    cw_redrawUserCarWheelRadiusHandler(layer, 1);
+
+    cw_redrawUserCarWheelVertexHandler(layer, 0);
+    cw_redrawUserCarWheelVertexHandler(layer, 1);
+
+    cw_redrawUserCarWheelDensityHandler(layer, 0);
+    cw_redrawUserCarWheelDensityHandler(layer, 1);
+
+    for (var i = 0; i < 8; ++i) {
+      cw_redrawUserCarChassisVertexHandler(layer, i);
+    }
+
+    cw_redrawUserCarChassisDensityHandler(layer);
+  }
 }
 
 function cw_initUserCarWheels(layer) {
@@ -1005,12 +1085,11 @@ function cw_initUserCarChassis(layer) {
 }
 
 function cw_initUserCarChassisPart(layer, vertex_index) {
-  var vertex_0 = user_car_def.vertex_list[vertex_index];
-  var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
-
   var chassis_part = new Kinetic.Shape({
     id: "user_car_chassis_part_" + vertex_index,
     sceneFunc: function(context) {
+      var vertex_0 = user_car_def.vertex_list[vertex_index];
+      var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
       var chassis_color = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
 
       chassis_part.fill("hsla(120, 50%, " + chassis_color + ", 0.7)");
@@ -1132,6 +1211,24 @@ function cw_redrawUserCarWheelDensityHandler(layer, wheel_index) {
 
   wheel_density_handler.setX(100 * wheel_vertex.x);
   wheel_density_handler.setY(100 * (wheel_vertex.y + wheel_density / wheelMaxDensity));
+
+  layer.draw();
+}
+
+function cw_redrawUserCarChassisVertexHandler(layer, vertex_index) {
+  var vertex_handler = layer.find("#user_car_vertex_handler_" + vertex_index);
+  var vertex = user_car_def.vertex_list[vertex_index];
+  vertex_handler.setX(100 * vertex.x);
+  vertex_handler.setY(100 * vertex.y);
+
+  layer.draw();
+}
+
+function cw_redrawUserCarChassisDensityHandler(layer) {
+  var chassis_density_handler = layer.find("#user_car_chassis_density_handler");
+  var chassis_density = user_car_def.chassis_density;
+  chassis_density_handler.setX(0);
+  chassis_density_handler.setY(100 * chassis_density / chassisMaxDensity);
 
   layer.draw();
 }
