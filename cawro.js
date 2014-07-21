@@ -808,8 +808,8 @@ function cw_initUserCar() {
 
   var stage = new Kinetic.Stage({
     container: "user_car_container",
-    width:  400,
-    height: 400,
+    width:  800,
+    height: 600,
     offsetX: -200,
     offsetY: 200,
     scaleY: -1
@@ -821,14 +821,15 @@ function cw_initUserCar() {
   cw_initUserCarWheels(layer);
   cw_initUserCarChassis(layer);
 
+  cw_initUserCarWheelHandlers(layer);
+  cw_initUserCarChassisHandlers(layer);
+
   layer.draw();
 }
 
 function cw_initUserCarWheels(layer) {
   for (var i = 0; i < user_car_def.wheelCount; i++) {
     cw_initUserCarWheel(layer, i);
-    cw_initUserCarWheelRadiusHandler(layer, i);
-    cw_initUserCarWheelVertexHandler(layer, i);
   }
 }
 
@@ -866,6 +867,13 @@ function cw_initUserCarWheel(layer, wheel_index) {
   }));
 }
 
+function cw_initUserCarWheelHandlers(layer) {
+  for (var i = 0; i < user_car_def.wheelCount; i++) {
+    cw_initUserCarWheelRadiusHandler(layer, i);
+    cw_initUserCarWheelVertexHandler(layer, i);
+  }
+}
+
 function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
   var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
   var wheel_radius = user_car_def.wheel_radius[wheel_index];
@@ -875,7 +883,7 @@ function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
     x: 100 * (wheel_vertex.x + wheel_radius),
     y: 100 * wheel_vertex.y,
     radius: 10,
-    stroke: "#000000",
+    stroke: "#ff0000",
     strokeWidth: 1,
     draggable: true
   });
@@ -897,7 +905,7 @@ function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
     x: 100 * wheel_vertex.x,
     y: 100 * wheel_vertex.y,
     radius: 20,
-    stroke: "#000000",
+    stroke: "#ff0000",
     strokeWidth: 1,
     draggable: true
   });
@@ -925,7 +933,6 @@ function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
 function cw_initUserCarChassis(layer) {
   for (var i = 0; i < 8; i++) {
     cw_initUserCarChassisPart(layer, i);
-    cw_initUserCarVertexHandler(layer, i);
   }
 }
 
@@ -948,6 +955,12 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
   }));
 }
 
+function cw_initUserCarChassisHandlers(layer) {
+  for (var i = 0; i < 8; i++) {
+    cw_initUserCarVertexHandler(layer, i);
+  }
+}
+
 function cw_initUserCarVertexHandler(layer, vertex_index) {
   var vertex = user_car_def.vertex_list[vertex_index];
 
@@ -956,7 +969,7 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     x: 100 * vertex.x,
     y: 100 * vertex.y,
     radius: 10,
-    stroke: "#000000",
+    stroke: "#ff0000",
     strokeWidth: 1,
     draggable: true
   });
