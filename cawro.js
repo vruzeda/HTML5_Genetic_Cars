@@ -803,6 +803,12 @@ function cw_drawMiniMap() {
 
 var user_car_def;
 
+var user_car_handler_color_wheel_radius    = "#ff00ff";
+var user_car_handler_color_wheel_vertex    = "#ff0000";
+var user_car_handler_color_wheel_density   = "#0000ff";
+var user_car_handler_color_chassis_vertex  = "#ff0000";
+var user_car_handler_color_chassis_density = "#0000ff";
+
 function cw_initUserCar() {
   user_car_def = cw_createRandomCar(2);
 
@@ -904,7 +910,7 @@ function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
     x: 100 * (wheel_vertex.x + wheel_radius),
     y: 100 * wheel_vertex.y,
     radius: 10,
-    stroke: "#ff00ff",
+    stroke: user_car_handler_color_wheel_radius,
     strokeWidth: 1,
     draggable: true
   });
@@ -926,7 +932,7 @@ function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
     x: 100 * wheel_vertex.x,
     y: 100 * wheel_vertex.y,
     radius: 20,
-    stroke: "#ff0000",
+    stroke: user_car_handler_color_wheel_vertex,
     strokeWidth: 1,
     draggable: true
   });
@@ -962,7 +968,7 @@ function cw_initUserCarWheelDensityHandler(layer, wheel_index) {
     x: 100 * wheel_vertex.x,
     y: 100 * (wheel_vertex.y + wheel_density / wheelMaxDensity),
     radius: 10,
-    stroke: "#0000ff",
+    stroke: user_car_handler_color_wheel_density,
     strokeWidth: 1,
     draggable: true
   });
@@ -1038,7 +1044,7 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     x: 100 * vertex.x,
     y: 100 * vertex.y,
     radius: 10,
-    stroke: "#ff0000",
+    stroke: user_car_handler_color_chassis_vertex,
     strokeWidth: 1,
     draggable: true
   });
@@ -1066,7 +1072,7 @@ function cw_initUserCarChassisDensityHandler(layer) {
     x: 0,
     y: 100 * user_car_def.chassis_density / chassisMaxDensity,
     radius: 10,
-    stroke: "#0000ff",
+    stroke: user_car_handler_color_chassis_density,
     strokeWidth: 1,
     draggable: true
   });
