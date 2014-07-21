@@ -940,6 +940,8 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
   var vertex_0 = user_car_def.vertex_list[vertex_index];
   var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
 
+  var chassis_color  = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
+
   layer.add(new Kinetic.Shape({
     id: "user_car_chassis_part_" + vertex_index,
     sceneFunc: function(context) {
@@ -950,7 +952,7 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
       context.closePath();
       context.fillStrokeShape(this);
     },
-    fill: "rgba(68, 204, 68, " + (0.3 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity)) + ")",
+    fill: "hsl(120, 50%, " + chassis_color + ")",
     stroke: "#44cc44"
   }));
 }
