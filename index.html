@@ -292,105 +292,11 @@
       <div name="healthtext" class="healthtext"></div>
     </div>
 
-    <div id="user_car">
-      <div style="display: inline-block;">
-        <label for="wheel_0_radius">Wheel 0 radius</label>
-        <input type="text" id="wheel_0_radius" value=""></input>
-        <br/>
-
-        <label for="wheel_0_density">Wheel 0 density</label>
-        <input type="text" id="wheel_0_density" value=""></input>
-        <br/>
-
-        <label for="wheel_0_vertex">Wheel 0 vertex</label>
-        <input type="text" id="wheel_0_vertex" value=""></input>
-        <br/>
-
-        <label for="wheel_1_radius">Wheel 1 radius</label>
-        <input type="text" id="wheel_1_radius" value=""></input>
-        <br/>
-
-        <label for="wheel_1_density">Wheel 1 density</label>
-        <input type="text" id="wheel_1_density" value=""></input>
-        <br/>
-
-        <label for="wheel_1_vertex">Wheel 1 vertex</label>
-        <input type="text" id="wheel_1_vertex" value=""></input>
-        <br/>
-
-        <label for="chassis_density">Chassis density</label>
-        <input type="text" id="chassis_density" value=""></input>
-        <br/>
-
-        <label for="vertex_0_x">Vertex 0 X variation</label>
-        <input type="text" id="vertex_0_x" value=""></input>
-        <br/>
-
-        <label for="vertex_0_y">Vertex 0 Y variation</label>
-        <input type="text" id="vertex_0_y" value=""></input>
-        <br/>
-
-        <label for="vertex_1_x">Vertex 1 X variation</label>
-        <input type="text" id="vertex_1_x" value=""></input>
-        <br/>
-
-        <label for="vertex_1_y">Vertex 1 Y variation</label>
-        <input type="text" id="vertex_1_y" value=""></input>
-        <br/>
-
-        <label for="vertex_2_x">Vertex 2 X variation</label>
-        <input type="text" id="vertex_2_x" value=""></input>
-        <br/>
-
-        <label for="vertex_2_y">Vertex 2 Y variation</label>
-        <input type="text" id="vertex_2_y" value=""></input>
-        <br/>
-
-        <label for="vertex_3_x">Vertex 3 X variation</label>
-        <input type="text" id="vertex_3_x" value=""></input>
-        <br/>
-
-        <label for="vertex_3_y">Vertex 3 Y variation</label>
-        <input type="text" id="vertex_3_y" value=""></input>
-        <br/>
-
-        <label for="vertex_4_x">Vertex 4 X variation</label>
-        <input type="text" id="vertex_4_x" value=""></input>
-        <br/>
-
-        <label for="vertex_4_y">Vertex 4 Y variation</label>
-        <input type="text" id="vertex_4_y" value=""></input>
-        <br/>
-
-        <label for="vertex_5_x">Vertex 5 X variation</label>
-        <input type="text" id="vertex_5_x" value=""></input>
-        <br/>
-
-        <label for="vertex_5_y">Vertex 5 Y variation</label>
-        <input type="text" id="vertex_5_y" value=""></input>
-        <br/>
-
-        <label for="vertex_6_x">Vertex 6 X variation</label>
-        <input type="text" id="vertex_6_x" value=""></input>
-        <br/>
-
-        <label for="vertex_6_y">Vertex 6 Y variation</label>
-        <input type="text" id="vertex_6_y" value=""></input>
-        <br/>
-
-        <label for="vertex_7_x">Vertex 7 X variation</label>
-        <input type="text" id="vertex_7_x" value=""></input>
-        <br/>
-
-        <label for="vertex_7_y">Vertex 7 Y variation</label>
-        <input type="text" id="vertex_7_y" value=""></input>
-      </div>
-
-      <canvas id="usercarbox" width="400" height="400"></canvas>
-    </div>
+    <div id="user_car_container"></div>
 
     <script src="lib/seedrandom.js"></script>
     <script src="lib/box2d.js"></script>
+    <script src="lib/kinetic-v5.1.0.min.js"></script>
     <script src="ghost.js"></script>
     <script src="path.js"></script>
     <script src="cawro.js"></script>

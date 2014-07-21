@@ -14,9 +14,6 @@ var debugbox = document.getElementById("debug");
 var canvas = document.getElementById("mainbox");
 var ctx = canvas.getContext("2d");
 
-var user_car_canvas = document.getElementById("usercarbox");
-var user_car_ctx = user_car_canvas.getContext("2d");
-
 var cameraspeed = 0.05;
 var camera_y = 0;
 var camera_x = 0;
@@ -804,110 +801,218 @@ function cw_drawMiniMap() {
 /* ========================================================================= */
 /* ==== User Car============================================================ */
 
+var user_car_def;
+
 function cw_initUserCar() {
-  var random_car = cw_createRandomCar();
+  user_car_def = cw_createRandomCar();
 
-  for (var i = 0; i < random_car.wheelCount; i++){
-    document.getElementById("wheel_" + i + "_radius").value = random_car.wheel_radius[i];
-    document.getElementById("wheel_" + i + "_density").value = random_car.wheel_density[i];
+  var stage = new Kinetic.Stage({
+    container: "user_car_container",
+    width:  400,
+    height: 400,
+    offsetX: -200,
+    offsetY: 200,
+    scaleY: -1
+  });
+
+  var layer = new Kinetic.Layer();
+  stage.add(layer);
+
+  cw_initUserCarWheels(layer);
+  cw_initUserCarChassis(layer);
+
+  layer.draw();
+}
+
+function cw_initUserCarWheels(layer) {
+  for (var i = 0; i < user_car_def.wheelCount; i++) {
+    cw_initUserCarWheel(layer, i);
+    cw_initUserCarWheelRadiusHandler(layer, i);
+    cw_initUserCarWheelVertexHandler(layer, i);
   }
+}
 
-  document.getElementById("chassis_density").value = random_car.chassis_density;
+function cw_initUserCarWheel(layer, wheel_index) {
+  var wheel_density = user_car_def.wheel_density[wheel_index];
+  var wheel_color = Math.round(255 - (255 * (wheel_density - wheelMinDensity)) / wheelMaxDensity);
 
-  for (var i = 0; i < 8; i++){
-    document.getElementById("vertex_" + i + "_x").value = random_car.vertex_list[i].x;
-    document.getElementById("vertex_" + i + "_y").value = random_car.vertex_list[i].y;
-  }
+  layer.add(new Kinetic.Shape({
+    id: "user_car_wheel_circle_" + wheel_index,
+    sceneFunc: function(context) {
+      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+      var wheel_radius = user_car_def.wheel_radius[wheel_index];
 
-  for (var i = 0; i < random_car.wheelCount; i++){
-    document.getElementById("wheel_" + i + "_vertex").value = random_car.wheel_vertex[i];
-  }
+      context.beginPath();
+      context.arc(100 * wheel_vertex.x, 100 * wheel_vertex.y, 100 * wheel_radius, 0, 2 * Math.PI);
+      context.closePath();
+      context.fillStrokeShape(this);
+    },
+    fill: "rgb(" + wheel_color + ", " + wheel_color + ", " + wheel_color + ")",
+    stroke: "#000000"
+  }));
 
-  var user_car_inputs = document.getElementById("user_car").getElementsByTagName("input");
-  for (var i = 0; i < user_car_inputs.length; i++){
-    var user_car_input = user_car_inputs[i];
-    user_car_input.onchange = function() {
-      cw_drawUserCar();
+  layer.add(new Kinetic.Shape({
+    id: "user_car_wheel_radius_" + wheel_index,
+    sceneFunc: function(context) {
+      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+      var wheel_radius = user_car_def.wheel_radius[wheel_index];
+
+      context.moveTo(100 * wheel_vertex.x, 100 * wheel_vertex.y);
+      context.lineTo(100 * (wheel_vertex.x + wheel_radius), 100 * wheel_vertex.y);
+      context.fillStrokeShape(this);
+    },
+    stroke: "#000000",
+    strokeWidth: 1
+  }));
+}
+
+function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+  var wheel_radius = user_car_def.wheel_radius[wheel_index];
+
+  var wheel_radius_handler = new Kinetic.Circle({
+    id: "user_car_wheel_radius_handler_" + wheel_index,
+    x: 100 * (wheel_vertex.x + wheel_radius),
+    y: 100 * wheel_vertex.y,
+    radius: 10,
+    stroke: "#000000",
+    strokeWidth: 1,
+    draggable: true
+  });
+
+  wheel_radius_handler.on("dragmove", function() {
+    var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+    wheel_radius_handler.setY(100 * wheel_vertex.y);
+    user_car_def.wheel_radius[wheel_index] = (wheel_radius_handler.x() / 100) - wheel_vertex.x;
+  });
+
+  layer.add(wheel_radius_handler);
+}
+
+function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+
+  var wheel_vertex_handler = new Kinetic.Circle({
+    id: "user_car_wheel_vertex_handler_" + wheel_index,
+    x: 100 * wheel_vertex.x,
+    y: 100 * wheel_vertex.y,
+    radius: 20,
+    stroke: "#000000",
+    strokeWidth: 1,
+    draggable: true
+  });
+
+  wheel_vertex_handler.on("dragmove", function() {
+    var wheel_vertex_handler_x = wheel_vertex_handler.x() / 100;
+    var wheel_vertex_handler_y = wheel_vertex_handler.y() / 100;
+
+    var first_wheel_vertex = user_car_def.wheel_vertex[wheel_index];
+    var final_wheel_vertex = cw_findClosestUserCarVertexIndex(wheel_vertex_handler_x, wheel_vertex_handler_y);
+    if (first_wheel_vertex != final_wheel_vertex) {
+      user_car_def.wheel_vertex[wheel_index] = final_wheel_vertex;
+      cw_redrawUserCarWheelRadiusHandler(layer, wheel_index);
     }
-  }
+  });
 
-  cw_drawUserCar();
+  wheel_vertex_handler.on("dragend", function() {
+    cw_redrawUserCarWheelRadiusHandler(layer, wheel_index);
+    cw_redrawUserCarWheelVertexHandler(layer, wheel_index);
+  });
+
+  layer.add(wheel_vertex_handler);
+}
+
+function cw_initUserCarChassis(layer) {
+  for (var i = 0; i < 8; i++) {
+    cw_initUserCarChassisPart(layer, i);
+    cw_initUserCarVertexHandler(layer, i);
+  }
+}
+
+function cw_initUserCarChassisPart(layer, vertex_index) {
+  var vertex_0 = user_car_def.vertex_list[vertex_index];
+  var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
+
+  layer.add(new Kinetic.Shape({
+    id: "user_car_chassis_part_" + vertex_index,
+    sceneFunc: function(context) {
+      context.beginPath();
+      context.moveTo(0, 0);
+      context.lineTo(100 * vertex_0.x, 100 * vertex_0.y);
+      context.lineTo(100 * vertex_1.x, 100 * vertex_1.y);
+      context.closePath();
+      context.fillStrokeShape(this);
+    },
+    fill: "rgba(68, 204, 68, " + (0.3 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity)) + ")",
+    stroke: "#44cc44"
+  }));
+}
+
+function cw_initUserCarVertexHandler(layer, vertex_index) {
+  var vertex = user_car_def.vertex_list[vertex_index];
+
+  var vertex_handler = new Kinetic.Circle({
+    id: "user_car_vertex_handler_" + vertex_index,
+    x: 100 * vertex.x,
+    y: 100 * vertex.y,
+    radius: 10,
+    stroke: "#000000",
+    strokeWidth: 1,
+    draggable: true
+  });
+
+  vertex_handler.on("dragmove", function(event) {
+    vertex.x = event.target.x() / 100;
+    vertex.y = event.target.y() / 100;
+
+    cw_redrawUserCarWheelRadiusHandler(layer, 0);
+    cw_redrawUserCarWheelRadiusHandler(layer, 1);
+
+    cw_redrawUserCarWheelVertexHandler(layer, 0);
+    cw_redrawUserCarWheelVertexHandler(layer, 1);
+  })
+
+  layer.add(vertex_handler);
 }
 
 function cw_createUserCar() {
-  var v = [];
-  var car_def = new Object();
-
-  car_def.wheelCount = 2;
-
-  car_def.wheel_radius = [];
-  car_def.wheel_density = [];
-  car_def.wheel_vertex = [];
-  for (var i = 0; i < car_def.wheelCount; i++){
-    car_def.wheel_radius[i]  = parseFloat(document.getElementById("wheel_" + i + "_radius").value);
-    car_def.wheel_density[i] = parseFloat(document.getElementById("wheel_" + i + "_density").value);
-  }
-
-  car_def.chassis_density = parseFloat(document.getElementById("chassis_density").value);
-
-  car_def.vertex_list = new Array();
-  for (var i = 0; i < 8; i++){
-    var vertex_x = parseFloat(document.getElementById("vertex_" + i + "_x").value);
-    var vertex_y = parseFloat(document.getElementById("vertex_" + i + "_y").value);
-    car_def.vertex_list.push(new b2Vec2(vertex_x, vertex_y));
-  }
-
-  for (var i = 0; i < car_def.wheelCount; i++){
-    car_def.wheel_vertex[i] = parseInt(document.getElementById("wheel_" + i + "_vertex").value);
-  }
-
-  return car_def;
+  return user_car_def;
 }
 
-function cw_drawUserCar() {
-  user_car_ctx.clearRect(0,0,user_car_canvas.width,user_car_canvas.height);
-  user_car_ctx.save();
-  user_car_ctx.translate(200, 200);
-  user_car_ctx.scale(zoom, -zoom);
+function cw_findClosestUserCarVertexIndex(x, y) {
+    var closest_vertex_distance = -1;
+    var closest_vertex_index = -1;
 
-  var user_car_def = cw_createUserCar();
+    for (var i = 0; i < 8; i++) {
+      var vertex = user_car_def.vertex_list[i];
+      var vertex_distance = Math.sqrt(Math.pow(vertex.x - x, 2) + Math.pow(vertex.y - y, 2));
 
-  user_car_ctx.strokeStyle = "#444";
-  user_car_ctx.lineWidth = 1/zoom;
-
-  for (var i = 0; i < user_car_def.wheelCount; i++){
-    var wheel_density = user_car_def.wheel_density[i];
-    var wheel_radius  = user_car_def.wheel_radius[i];
-    var wheel_vertex  = user_car_def.vertex_list[user_car_def.wheel_vertex[i]];
-
-    var color = Math.round(255 - (255 * (wheel_density - wheelMinDensity)) / wheelMaxDensity).toString();
-    var rgbcolor = "rgb("+color+","+color+","+color+")";
-    cw_drawCircle(user_car_ctx, cw_createFakeBody(), wheel_vertex, wheel_radius, 0, rgbcolor);
-  }
-
-  var densitycolor = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
-  user_car_ctx.strokeStyle = "#4c4";
-  user_car_ctx.fillStyle = "hsl(120,50%,"+densitycolor+")";
-  user_car_ctx.beginPath();
-  for (var i = 0; i < 8; i++) {
-    var vertex_0 = user_car_def.vertex_list[i];
-    var vertex_1 = user_car_def.vertex_list[(i + 1) % 8];
-    var vertex_2 = { x: 0, y: 0 }
-
-    cw_drawVirtualPoly(user_car_ctx, cw_createFakeBody(), [vertex_0, vertex_1, vertex_2], 3);
-  }
-  user_car_ctx.fill();
-  user_car_ctx.stroke();
-
-  user_car_ctx.restore();
-}
-
-function cw_createFakeBody() {
-  return {
-    GetWorldPoint: function(point) {
-      return point;
+      if ((closest_vertex_distance < 0)|| (vertex_distance < closest_vertex_distance)) {
+        closest_vertex_distance = vertex_distance;
+        closest_vertex_index = i;
+      }
     }
-  }
+
+    return closest_vertex_index;
+}
+
+function cw_redrawUserCarWheelRadiusHandler(layer, wheel_index) {
+  var wheel_radius_handler = layer.find("#user_car_wheel_radius_handler_" + wheel_index);
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+  var wheel_radius = user_car_def.wheel_radius[wheel_index];
+  wheel_radius_handler.setX(100 * (wheel_vertex.x + wheel_radius));
+  wheel_radius_handler.setY(100 * wheel_vertex.y);
+
+  layer.draw();
+}
+
+function cw_redrawUserCarWheelVertexHandler(layer, wheel_index) {
+  var wheel_vertex_handler = layer.find("#user_car_wheel_vertex_handler_" + wheel_index);
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+  wheel_vertex_handler.setX(100 * wheel_vertex.x);
+  wheel_vertex_handler.setY(100 * wheel_vertex.y);
+
+  layer.draw();
 }
 
 /* ==== END User Car ======================================================= */
