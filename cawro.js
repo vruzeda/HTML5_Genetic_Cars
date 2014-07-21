@@ -900,7 +900,7 @@ function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
     x: 100 * (wheel_vertex.x + wheel_radius),
     y: 100 * wheel_vertex.y,
     radius: 10,
-    stroke: "#ff0000",
+    stroke: "#ff00ff",
     strokeWidth: 1,
     draggable: true
   });
@@ -958,7 +958,7 @@ function cw_initUserCarWheelDensityHandler(layer, wheel_index) {
     x: 100 * wheel_vertex.x,
     y: 100 * (wheel_vertex.y + wheel_density / wheelMaxDensity),
     radius: 10,
-    stroke: "#ff0000",
+    stroke: "#0000ff",
     strokeWidth: 1,
     draggable: true
   });
@@ -977,17 +977,32 @@ function cw_initUserCarChassis(layer) {
   for (var i = 0; i < 8; i++) {
     cw_initUserCarChassisPart(layer, i);
   }
+
+  layer.add(new Kinetic.Shape({
+    id: "user_car_chassis_density",
+    sceneFunc: function(context) {
+      var chassis_density = user_car_def.chassis_density;
+
+      context.moveTo(0, 0);
+      context.lineTo(0, 100 * chassis_density / chassisMaxDensity);
+      context.fillStrokeShape(this);
+    },
+    stroke: "#000000",
+    strokeWidth: 1
+  }));
 }
 
 function cw_initUserCarChassisPart(layer, vertex_index) {
   var vertex_0 = user_car_def.vertex_list[vertex_index];
   var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
 
-  var chassis_color  = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
-
-  layer.add(new Kinetic.Shape({
+  var chassis_part = new Kinetic.Shape({
     id: "user_car_chassis_part_" + vertex_index,
     sceneFunc: function(context) {
+      var chassis_color = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
+
+      chassis_part.fill("hsla(120, 50%, " + chassis_color + ", 0.7)");
+
       context.beginPath();
       context.moveTo(0, 0);
       context.lineTo(100 * vertex_0.x, 100 * vertex_0.y);
@@ -995,15 +1010,18 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
       context.closePath();
       context.fillStrokeShape(this);
     },
-    fill: "hsla(120, 50%, " + chassis_color + ", 0.7)",
+    fill: "#ff00ff",
     stroke: "#44cc44"
-  }));
+  });
+  layer.add(chassis_part);
 }
 
 function cw_initUserCarChassisHandlers(layer) {
   for (var i = 0; i < 8; i++) {
     cw_initUserCarVertexHandler(layer, i);
   }
+
+  cw_initUserCarChassisDensityHandler(layer);
 }
 
 function cw_initUserCarVertexHandler(layer, vertex_index) {
@@ -1034,6 +1052,25 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
   })
 
   layer.add(vertex_handler);
+}
+
+function cw_initUserCarChassisDensityHandler(layer) {
+  var chassis_density_handler = new Kinetic.Circle({
+    id: "user_car_chassis_density_handler",
+    x: 0,
+    y: 100 * user_car_def.chassis_density / chassisMaxDensity,
+    radius: 10,
+    stroke: "#0000ff",
+    strokeWidth: 1,
+    draggable: true
+  });
+
+  chassis_density_handler.on("dragmove", function() {
+    chassis_density_handler.setX(0);
+    user_car_def.chassis_density = chassisMaxDensity * (chassis_density_handler.y() / 100);
+  });
+
+  layer.add(chassis_density_handler);
 }
 
 function cw_createUserCar() {
