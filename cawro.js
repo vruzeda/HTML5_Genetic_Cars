@@ -860,8 +860,10 @@ function cw_initUserCarWheel(layer, wheel_index) {
       var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
       var wheel_radius = user_car_def.wheel_radius[wheel_index];
 
+      context.beginPath();
       context.moveTo(100 * wheel_vertex.x, 100 * wheel_vertex.y);
       context.lineTo(100 * (wheel_vertex.x + wheel_radius), 100 * wheel_vertex.y);
+      context.closePath();
       context.fillStrokeShape(this);
     },
     stroke: "#000000",
@@ -874,8 +876,10 @@ function cw_initUserCarWheel(layer, wheel_index) {
       var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
       var wheel_density = user_car_def.wheel_density[wheel_index];
 
+      context.beginPath();
       context.moveTo(100 * wheel_vertex.x, 100 * wheel_vertex.y);
       context.lineTo(100 * wheel_vertex.x, 100 * (wheel_vertex.y + wheel_density / wheelMaxDensity));
+      context.closePath();
       context.fillStrokeShape(this);
     },
     stroke: "#000000",
@@ -908,7 +912,7 @@ function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
   wheel_radius_handler.on("dragmove", function() {
     var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
     wheel_radius_handler.setY(100 * wheel_vertex.y);
-    user_car_def.wheel_radius[wheel_index] = (wheel_radius_handler.x() / 100) - wheel_vertex.x;
+    user_car_def.wheel_radius[wheel_index] = Math.abs((wheel_radius_handler.x() / 100) - wheel_vertex.x);
   });
 
   layer.add(wheel_radius_handler);
@@ -983,8 +987,10 @@ function cw_initUserCarChassis(layer) {
     sceneFunc: function(context) {
       var chassis_density = user_car_def.chassis_density;
 
+      context.beginPath();
       context.moveTo(0, 0);
       context.lineTo(0, 100 * chassis_density / chassisMaxDensity);
+      context.closePath();
       context.fillStrokeShape(this);
     },
     stroke: "#000000",
