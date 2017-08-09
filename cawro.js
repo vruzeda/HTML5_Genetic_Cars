@@ -809,8 +809,12 @@ var user_car_handler_color_wheel_density   = "#0000ff";
 var user_car_handler_color_chassis_vertex  = "#ff0000";
 var user_car_handler_color_chassis_density = "#0000ff";
 
-function cw_initUserCar() {
-  user_car_def = cw_createRandomCar(2);
+function cw_initRandomUserCar() {
+  cw_initUserCar(cw_createRandomCar(2));
+}
+
+function cw_initUserCar(userCarDef) {
+  user_car_def = userCarDef;
 
   var stage = new Kinetic.Stage({
     container: "user_car_container",
@@ -887,29 +891,15 @@ function cw_deserializeUserCar(layer) {
       wheel_density.push(wheel.density);
     }
 
-    user_car_def = {
+    layer.clear();
+    cw_initUserCar({
       chassis_density: user_car_json.chassis_density,
       vertex_list: vertex_list,
       wheelCount: user_car_json.wheel_count,
       wheel_radius: wheel_radius,
       wheel_vertex: wheel_vertex,
       wheel_density: wheel_density
-    }
-
-    cw_redrawUserCarWheelRadiusHandler(layer, 0);
-    cw_redrawUserCarWheelRadiusHandler(layer, 1);
-
-    cw_redrawUserCarWheelVertexHandler(layer, 0);
-    cw_redrawUserCarWheelVertexHandler(layer, 1);
-
-    cw_redrawUserCarWheelDensityHandler(layer, 0);
-    cw_redrawUserCarWheelDensityHandler(layer, 1);
-
-    for (var i = 0; i < 8; ++i) {
-      cw_redrawUserCarChassisVertexHandler(layer, i);
-    }
-
-    cw_redrawUserCarChassisDensityHandler(layer);
+    });
   }
 }
 
@@ -1132,14 +1122,11 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     vertex.x = event.target.x() / 100;
     vertex.y = event.target.y() / 100;
 
-    cw_redrawUserCarWheelRadiusHandler(layer, 0);
-    cw_redrawUserCarWheelRadiusHandler(layer, 1);
-
-    cw_redrawUserCarWheelVertexHandler(layer, 0);
-    cw_redrawUserCarWheelVertexHandler(layer, 1);
-
-    cw_redrawUserCarWheelDensityHandler(layer, 0);
-    cw_redrawUserCarWheelDensityHandler(layer, 1);
+    for (var i = 0; i < user_car_def.wheelCount; ++i) {
+      cw_redrawUserCarWheelRadiusHandler(layer, i);
+      cw_redrawUserCarWheelVertexHandler(layer, i);
+      cw_redrawUserCarWheelDensityHandler(layer, i);
+    }
   })
 
   layer.add(vertex_handler);
@@ -1423,7 +1410,7 @@ function cw_toggleGhostReplay(button) {
 
 // initial stuff, only called once (hopefully)
 function cw_init() {
-  cw_initUserCar();
+  cw_initRandomUserCar();
 
   // clone silver dot and health bar
   var mmm  = document.getElementsByName('minimapmarker')[0];
