@@ -267,14 +267,9 @@ function cw_createChassis(vertex_list, density) {
 
   var body = world.CreateBody(body_def);
 
-  cw_createChassisPart(body, vertex_list[0],vertex_list[1], density);
-  cw_createChassisPart(body, vertex_list[1],vertex_list[2], density);
-  cw_createChassisPart(body, vertex_list[2],vertex_list[3], density);
-  cw_createChassisPart(body, vertex_list[3],vertex_list[4], density);
-  cw_createChassisPart(body, vertex_list[4],vertex_list[5], density);
-  cw_createChassisPart(body, vertex_list[5],vertex_list[6], density);
-  cw_createChassisPart(body, vertex_list[6],vertex_list[7], density);
-  cw_createChassisPart(body, vertex_list[7],vertex_list[0], density);
+  for (var i = 0; i < vertex_list.length; ++i) {
+    cw_createChassisPart(body, vertex_list[i], vertex_list[(i + 1) % vertex_list.length], density);
+  }
 
   body.vertex_list = vertex_list;
 
@@ -876,7 +871,7 @@ function cw_deserializeUserCar(layer) {
     var user_car_json = JSON.parse(document.getElementById("user_car_json").value);
 
     var vertex_list = [];
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < user_car_json.vertex_list.length; i++) {
       var vertex = user_car_json.vertex_list[i];
       vertex_list.push(new b2Vec2(vertex.x, vertex.y));
     }
@@ -1054,7 +1049,7 @@ function cw_initUserCarWheelDensityHandler(layer, wheel_index) {
 }
 
 function cw_initUserCarChassis(layer) {
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < user_car_def.vertex_list.length; i++) {
     cw_initUserCarChassisPart(layer, i);
   }
 
@@ -1079,7 +1074,7 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
     id: "user_car_chassis_part_" + vertex_index,
     sceneFunc: function(context) {
       var vertex_0 = user_car_def.vertex_list[vertex_index];
-      var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % 8];
+      var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % user_car_def.vertex_list.length];
       var chassis_color = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
 
       chassis_part.fill("hsla(120, 50%, " + chassis_color + ", 0.7)");
@@ -1098,7 +1093,7 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
 }
 
 function cw_initUserCarChassisHandlers(layer) {
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < user_car_def.vertex_list.length; i++) {
     cw_initUserCarVertexHandler(layer, i);
   }
 
@@ -1159,7 +1154,7 @@ function cw_findClosestUserCarVertexIndex(x, y) {
     var closest_vertex_distance = -1;
     var closest_vertex_index = -1;
 
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < user_car_def.vertex_list.length; i++) {
       var vertex = user_car_def.vertex_list[i];
       var vertex_distance = Math.sqrt(Math.pow(vertex.x - x, 2) + Math.pow(vertex.y - y, 2));
 
