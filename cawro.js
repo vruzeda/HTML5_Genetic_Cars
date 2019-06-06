@@ -1346,6 +1346,7 @@ function cw_resetWorld() {
   for (b = world.m_bodyList; b; b = b.m_next) {
     world.DestroyBody(b);
   }
+  cw_floorTiles = new Array();
   floorseed = document.getElementById("newseed").value;
   Math.seedrandom(floorseed);
   cw_createFloor();
