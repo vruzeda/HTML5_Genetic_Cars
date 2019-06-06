@@ -1218,6 +1218,7 @@ function cw_redrawUserCarChassisDensityHandler(layer) {
 /* ==== END User Car ======================================================= */
 /* ========================================================================= */
 
+var last_tile_world_coords = null;
 
 function simulationStep() {
   world.Step(1/box2dfps, 20, 20);
@@ -1250,6 +1251,12 @@ function simulationStep() {
       leaderPosition.leader = k;
     }
   }
+
+  if (last_tile_world_coords.x - leaderPosition.x <= 10) {
+    maxFloorTiles += 100;
+    cw_createFloor();
+  }
+
   showDistance(Math.round(leaderPosition.x*100)/100, Math.round(leaderPosition.y*100)/100);
 }
 

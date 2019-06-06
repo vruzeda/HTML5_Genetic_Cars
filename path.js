@@ -3,9 +3,15 @@
 
 function cw_createFloor() {
   var last_tile = null;
-  var tile_position = new b2Vec2(-5,0);
-  cw_floorTiles = new Array();
+  var tile_position;
+  if (cw_floorTiles.length == 0) {
+    tile_position = new b2Vec2(-5,0);
+  } else {
+    tile_position = last_tile_world_coords;
+  }
+
   Math.seedrandom(floorseed);
+
   for(var k = 0; k < maxFloorTiles; k++) {
     if (!mutable_floor) {
       // keep old impossible tracks if not using mutable floors
@@ -14,13 +20,17 @@ function cw_createFloor() {
       // if path is mutable over races, create smoother tracks
       last_tile = cw_createFloorTile(tile_position, (Math.random()*3 - 1.5) * 1.2*k/maxFloorTiles);
     }
-    cw_floorTiles.push(last_tile);
-    last_fixture = last_tile.GetFixtureList();
-    last_world_coords = last_tile.GetWorldPoint(last_fixture.GetShape().m_vertices[3]);
-    tile_position = last_world_coords;
-  }
-}
 
+    if (k >= cw_floorTiles.length) {
+      cw_floorTiles.push(last_tile);
+      last_fixture = last_tile.GetFixtureList();
+      last_world_coords = last_tile.GetWorldPoint(last_fixture.GetShape().m_vertices[3]);
+      tile_position = last_world_coords;
+    }
+  }
+
+  last_tile_world_coords = tile_position;
+}
 
 function cw_createFloorTile(position, angle) {
   body_def = new b2BodyDef();
