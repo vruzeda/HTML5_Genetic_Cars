@@ -1255,6 +1255,7 @@ function simulationStep() {
   if (last_tile_world_coords.x - leaderPosition.x <= 10) {
     maxFloorTiles += 100;
     cw_createFloor();
+    cw_drawMiniMap();
   }
 
   showDistance(Math.round(leaderPosition.x*100)/100, Math.round(leaderPosition.y*100)/100);
