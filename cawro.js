@@ -404,6 +404,7 @@ function cw_nextGeneration() {
     newGeneration.push(car_def);
   }
   for(var k = 0; k < gen_champions; k++) {
+    champions[k].car_def.is_user = false;
     champions[k].car_def.is_elite = true;
     champions[k].car_def.index = number_user_cars + k;
     newGeneration.push(champions[k].car_def);
@@ -417,6 +418,7 @@ function cw_nextGeneration() {
     newborn = cw_makeChild(champions[parent1].car_def,
                            champions[parent2].car_def);
     newborn = cw_mutate(newborn);
+    newborn.is_user = false;
     newborn.is_elite = false;
     newborn.index = k;
     newGeneration.push(newborn);
