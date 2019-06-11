@@ -299,7 +299,7 @@ function cw_createRandomCar(wheel_count) {
   var v = [];
   var car_def = new Object();
 
-  car_def.wheels_list = Array.from(new Array(wheel_count), () => ({}));
+  car_def.wheels_list = Array.from(new Array(wheel_count), () => new Object());
   for (var i = 0; i < car_def.wheels_list.length; i++){
     car_def.wheels_list[i].radius = Math.random()*wheelMaxRadius+wheelMinRadius;
     car_def.wheels_list[i].density = Math.random()*wheelMaxDensity+wheelMinDensity;
@@ -414,7 +414,7 @@ function cw_getChampions() {
   var ret = new Array();
   cw_carScores.sort(function(a,b) {if(a.v > b.v) {return -1} else {return 1}});
   for(var k = 0; k < generationSize; k++) {
-    if (!cw_carScores[k].car_def.is_user) {
+    if (evolve_with_user_cars || !cw_carScores[k].car_def.is_user) {
       ret.push(cw_carScores[k]);
     }
   }
@@ -422,14 +422,10 @@ function cw_getChampions() {
 }
 
 function cw_getParents() {
-    var poolSize = generationSize;
-    if (!evolve_with_user_cars) {
-      poolSize -= number_user_cars;
-    }
     var r = Math.random();
     if (r == 0)
         return 0;
-    return Math.floor(-Math.log(r) * poolSize) % poolSize;
+    return Math.floor(-Math.log(r) * (generationSize - number_user_cars)) % (generationSize - number_user_cars);
 }
 
 function cw_makeChild(car_def1, car_def2) {
@@ -449,7 +445,7 @@ function cw_makeChild(car_def1, car_def2) {
     wheelParent = Math.floor(Math.random() * 2);
   }
 
-  newCarDef.wheels_list = Array.from(new Array(parents[wheelParent].wheels_list.length), () => ({}));
+  newCarDef.wheels_list = Array.from(new Array(parents[wheelParent].wheels_list.length), () => new Object());
 
   for (var i = 0; i < newCarDef.wheels_list.length; i++){
     if (variateWheelParents){
