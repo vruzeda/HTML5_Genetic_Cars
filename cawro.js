@@ -41,6 +41,7 @@ var cw_graphElite = new Array();
 var cw_graphAverage = new Array();
 
 var number_user_cars = 1;
+var evolve_with_user_cars = false;
 var gen_champions = 1;
 var gen_parentality = 0.2;
 var gen_mutation = 0.05;
@@ -425,10 +426,14 @@ function cw_getChampions() {
 }
 
 function cw_getParents() {
+    var poolSize = generationSize;
+    if (!evolve_with_user_cars) {
+      poolSize -= number_user_cars;
+    }
     var r = Math.random();
     if (r == 0)
         return 0;
-    return Math.floor(-Math.log(r) * (generationSize - number_user_cars)) % (generationSize - number_user_cars);
+    return Math.floor(-Math.log(r) * poolSize) % poolSize;
 }
 
 function cw_makeChild(car_def1, car_def2) {
@@ -602,6 +607,10 @@ function cw_setGravity(choice) {
 
 function cw_setEliteSize(clones) {
   gen_champions = parseInt(clones, 10);
+}
+
+function cw_setEvolveWithUserCars(evolveWithUserCars) {
+  evolve_with_user_cars = evolveWithUserCars;
 }
 
 /* ==== END Genration ====================================================== */
