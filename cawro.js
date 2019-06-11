@@ -838,7 +838,7 @@ function cw_initUserCar(userCarDef) {
 function cw_serializeUserCar(layer) {
   return function() {
     var vertex_list = [];
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < user_car_def.vertex_list.length; i++) {
       var vertex = user_car_def.vertex_list[i];
       vertex_list.push({
         x: vertex.x,
