@@ -465,6 +465,23 @@ function cw_makeChild(car_def1, car_def2) {
   var parents = [car_def1, car_def2];
   var curparent = 0;
 
+  // Inheriting vertex
+  var vertexParent = 0;
+  var variateVertexParents = parents[0].vertex_list.length == parents[1].vertex_list.length;
+  if (!variateVertexParents) {
+    vertexParent = Math.floor(Math.random() * 2);
+  }
+  newCarDef.vertex_list = new Array(parents[vertexParent].vertex_list.length);
+
+  for (var i = 0; i < newCarDef.vertex_list.length; i++) {
+    if (variateVertexParents) {
+      curparent = cw_chooseParent(curparent, i + 4);
+    } else {
+      curparent = vertexParent;
+    }
+    newCarDef.vertex_list[i] = parents[curparent].vertex_list[i];
+  }
+
   // Inheriting wheels
   var wheelParent = 0;
   var variateWheelParents = parents[0].wheels_list.length == parents[1].wheels_list.length;
@@ -489,6 +506,11 @@ function cw_makeChild(car_def1, car_def2) {
       curparent = wheelParent;
     }
     newCarDef.wheels_list[i].vertex = parents[curparent].wheels_list[i].vertex;
+
+    // Special case: wheel was in a non-inherited vertex
+    if (newCarDef.wheels_list[i].vertex >= newCarDef.vertex_list.length) {
+      newCarDef.wheels_list[i].vertex = Math.floor(Math.random() * newCarDef.vertex_list.length) % newCarDef.vertex_list.length;
+    }
   }
 
   for (var i = 0; i < newCarDef.wheels_list.length; i++){
@@ -498,23 +520,6 @@ function cw_makeChild(car_def1, car_def2) {
       curparent = wheelParent;
     }
     newCarDef.wheels_list[i].density = parents[curparent].wheels_list[i].density;
-  }
-
-  // Inheriting vertex
-  var vertexParent = 0;
-  var variateVertexParents = parents[0].vertex_list.length == parents[1].vertex_list.length;
-  if (!variateVertexParents) {
-    vertexParent = Math.floor(Math.random() * 2);
-  }
-  newCarDef.vertex_list = new Array(parents[vertexParent].vertex_list.length);
-
-  for (var i = 0; i < newCarDef.vertex_list.length; i++) {
-    if (variateVertexParents) {
-      curparent = cw_chooseParent(curparent, i + 4);
-    } else {
-      curparent = vertexParent;
-    }
-    newCarDef.vertex_list[i] = parents[curparent].vertex_list[i];
   }
 
   curparent = cw_chooseParent(curparent, 14);
@@ -534,17 +539,20 @@ function cw_mutate1(old, min, range) {
 }
 
 function cw_mutatev(car_def, n, xfact, yfact) {
-    if (Math.random() >= gen_mutation)
+    if (Math.random() >= gen_mutation) {
         return;
+    }
 
     var v = car_def.vertex_list[n];
     var x = 0;
     var y = 0;
-    if (xfact != 0)
+    if (xfact != 0) {
         x = xfact * cw_mutate1(xfact * v.x, chassisMinAxis, chassisMaxAxis);
-    if (yfact != 0)
+    }
+    if (yfact != 0) {
         y = yfact * cw_mutate1(yfact * v.y, chassisMinAxis, chassisMaxAxis);
-    car_def.vertex_list.splice(n, 1, new b2Vec2(x, y));
+    }
+    car_def.vertex_list[n] = { x, y };
 }
 
 
@@ -559,7 +567,7 @@ function cw_mutate(car_def) {
 
   for (var i = 0; i < car_def.wheels_list.length; i++){
     if(Math.random() < wheel_m_rate){
-      car_def.wheels_list[i].vertex = Math.floor(Math.random()*8)%8;
+      car_def.wheels_list[i].vertex = Math.floor(Math.random() * car_def.vertex_list.length) % car_def.vertex_list.length;
     }
   }
 
@@ -573,14 +581,11 @@ function cw_mutate(car_def) {
     car_def.chassis_density = cw_mutate1(car_def.chassis_density, chassisMinDensity, chassisMaxDensity);
   }
 
-  cw_mutatev(car_def, 0, 1, 0);
-  cw_mutatev(car_def, 1, 1, 1);
-  cw_mutatev(car_def, 2, 0, 1);
-  cw_mutatev(car_def, 3, -1, 1);
-  cw_mutatev(car_def, 4, -1, 0);
-  cw_mutatev(car_def, 5, -1, -1);
-  cw_mutatev(car_def, 6, 0, -1);
-  cw_mutatev(car_def, 7, 1, -1);
+  for (var i = 0; i < car_def.vertex_list.length; i++) {
+    var xfact = Math.sign((4 - (i + 2) % 8) % 4);
+    var yfact = Math.sign((4 - i) % 4);
+    cw_mutatev(car_def, i, xfact, yfact);
+  }
 
   return car_def;
 }
