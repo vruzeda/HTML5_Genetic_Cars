@@ -155,23 +155,23 @@ cw_Car.prototype.__constructor = function(car_def) {
   this.chassis = cw_createChassis(car_def.vertex_list, car_def.chassis_density);
 
   this.wheels = [];
-  for (var i = 0; i < car_def.wheelCount; i++){
-    this.wheels[i] = cw_createWheel(car_def.wheel_radius[i], car_def.wheel_density[i]);
+  for (var i = 0; i < car_def.wheels_list.length; i++){
+    this.wheels[i] = cw_createWheel(car_def.wheels_list[i].radius, car_def.wheels_list[i].density);
   }
 
   var carmass = this.chassis.GetMass();
-  for (var i = 0; i < car_def.wheelCount; i++){
+  for (var i = 0; i < car_def.wheels_list.length; i++){
     carmass += this.wheels[i].GetMass();
   }
   var torque = [];
-  for (var i = 0; i < car_def.wheelCount; i++){
-    torque[i] = carmass * -gravity.y / car_def.wheel_radius[i];
+  for (var i = 0; i < car_def.wheels_list.length; i++){
+    torque[i] = carmass * -gravity.y / car_def.wheels_list[i].radius;
   }
 
   var joint_def = new b2RevoluteJointDef();
 
-  for (var i = 0; i < car_def.wheelCount; i++){
-    var randvertex = this.chassis.vertex_list[car_def.wheel_vertex[i]];
+  for (var i = 0; i < car_def.wheels_list.length; i++){
+    var randvertex = this.chassis.vertex_list[car_def.wheels_list[i].vertex];
     joint_def.localAnchorA.Set(randvertex.x, randvertex.y);
     joint_def.localAnchorB.Set(0, 0);
     joint_def.maxMotorTorque = torque[i];
@@ -299,14 +299,10 @@ function cw_createRandomCar(wheel_count) {
   var v = [];
   var car_def = new Object();
 
-  car_def.wheelCount = wheel_count;
-
-  car_def.wheel_radius = [];
-  car_def.wheel_density = [];
-  car_def.wheel_vertex = [];
-  for (var i = 0; i < car_def.wheelCount; i++){
-    car_def.wheel_radius[i] = Math.random()*wheelMaxRadius+wheelMinRadius;
-    car_def.wheel_density[i] = Math.random()*wheelMaxDensity+wheelMinDensity;
+  car_def.wheels_list = Array.from(new Array(wheel_count), () => ({}));
+  for (var i = 0; i < car_def.wheels_list.length; i++){
+    car_def.wheels_list[i].radius = Math.random()*wheelMaxRadius+wheelMinRadius;
+    car_def.wheels_list[i].density = Math.random()*wheelMaxDensity+wheelMinDensity;
   }
 
   car_def.chassis_density = Math.random()*chassisMaxDensity+chassisMinDensity
@@ -325,9 +321,9 @@ function cw_createRandomCar(wheel_count) {
   for (var i = 0; i < 8; i++){
     left.push(i);
   }
-  for (var i = 0; i < car_def.wheelCount; i++){
+  for (var i = 0; i < car_def.wheels_list.length; i++){
     var indexOfNext = Math.floor(Math.random()*left.length);
-    car_def.wheel_vertex[i] = left[indexOfNext];
+    car_def.wheels_list[i].vertex = left[indexOfNext];
     left.splice(indexOfNext, 1);
   }
 
@@ -447,42 +443,39 @@ function cw_makeChild(car_def1, car_def2) {
   var curparent = 0;
   var wheelParent = 0;
 
-  var variateWheelParents = parents[0].wheelCount == parents[1].wheelCount;
+  var variateWheelParents = parents[0].wheels_list.length == parents[1].wheels_list.length;
 
   if (!variateWheelParents){
     wheelParent = Math.floor(Math.random() * 2);
   }
 
-  newCarDef.wheelCount = parents[wheelParent].wheelCount;
+  newCarDef.wheels_list = Array.from(new Array(parents[wheelParent].wheels_list.length), () => ({}));
 
-  newCarDef.wheel_radius = [];
-  for (var i = 0; i < newCarDef.wheelCount; i++){
+  for (var i = 0; i < newCarDef.wheels_list.length; i++){
     if (variateWheelParents){
       curparent = cw_chooseParent(curparent,i);
     } else {
       curparent = wheelParent;
     }
-    newCarDef.wheel_radius[i] = parents[curparent].wheel_radius[i];
+    newCarDef.wheels_list[i].radius = parents[curparent].wheels_list[i].radius;
   }
 
-  newCarDef.wheel_vertex = [];
-  for (var i = 0; i < newCarDef.wheelCount; i++){
+  for (var i = 0; i < newCarDef.wheels_list.length; i++){
     if (variateWheelParents){
       curparent = cw_chooseParent(curparent, i + 2);
     } else {
       curparent = wheelParent;
     }
-    newCarDef.wheel_vertex[i] = parents[curparent].wheel_vertex[i];
+    newCarDef.wheels_list[i].vertex = parents[curparent].wheels_list[i].vertex;
   }
 
-  newCarDef.wheel_density = [];
-  for (var i = 0; i < newCarDef.wheelCount; i++){
+  for (var i = 0; i < newCarDef.wheels_list.length; i++){
     if (variateWheelParents){
       curparent = cw_chooseParent(curparent,i + 12);
     } else {
       curparent = wheelParent;
     }
-    newCarDef.wheel_density[i] = parents[curparent].wheel_density[i];
+    newCarDef.wheels_list[i].density = parents[curparent].wheels_list[i].density;
   }
 
   newCarDef.vertex_list = new Array();
@@ -535,23 +528,23 @@ function cw_mutatev(car_def, n, xfact, yfact) {
 
 
 function cw_mutate(car_def) {
-  for (var i = 0; i < car_def.wheelCount; i++){
+  for (var i = 0; i < car_def.wheels_list.length; i++){
     if(Math.random() < gen_mutation){
-      car_def.wheel_radius[i] = cw_mutate1(car_def.wheel_radius[i], wheelMinRadius, wheelMaxRadius);
+      car_def.wheels_list[i].radius = cw_mutate1(car_def.wheels_list[i].radius, wheelMinRadius, wheelMaxRadius);
     }
   }
 
   var wheel_m_rate = mutation_range < gen_mutation ? mutation_range : gen_mutation;
 
-  for (var i = 0; i < car_def.wheelCount; i++){
+  for (var i = 0; i < car_def.wheels_list.length; i++){
     if(Math.random() < wheel_m_rate){
-      car_def.wheel_vertex[i] = Math.floor(Math.random()*8)%8;
+      car_def.wheels_list[i].vertex = Math.floor(Math.random()*8)%8;
     }
   }
 
-  for (var i = 0; i < car_def.wheelCount; i++){
+  for (var i = 0; i < car_def.wheels_list.length; i++){
     if(Math.random() < gen_mutation){
-      car_def.wheel_density[i] = cw_mutate1(car_def.wheel_density[i], wheelMinDensity, wheelMaxDensity);
+      car_def.wheels_list[i].density = cw_mutate1(car_def.wheels_list[i].density, wheelMinDensity, wheelMaxDensity);
     }
   }
 
@@ -855,20 +848,10 @@ function cw_serializeUserCar(layer) {
       });
     }
 
-    var wheels_list = [];
-    for (var i = 0; i < user_car_def.wheelCount; i++) {
-      wheels_list.push({
-        radius: user_car_def.wheel_radius[i],
-        vertex: user_car_def.wheel_vertex[i],
-        density: user_car_def.wheel_density[i]
-      })
-    }
-
     var user_car_json = {
       chassis_density: user_car_def.chassis_density,
       vertex_list: vertex_list,
-      wheel_count: user_car_def.wheelCount,
-      wheels_list: wheels_list
+      wheels_list: user_car_def.wheels_list
     }
 
     document.getElementById("user_car_json").value = JSON.stringify(user_car_json);
@@ -885,30 +868,17 @@ function cw_deserializeUserCar(layer) {
       vertex_list.push(new b2Vec2(vertex.x, vertex.y));
     }
 
-    var wheel_radius = [];
-    var wheel_vertex = [];
-    var wheel_density = [];
-    for (var i = 0; i < user_car_json.wheel_count; i++) {
-      var wheel = user_car_json.wheels_list[i];
-      wheel_radius.push(wheel.radius);
-      wheel_vertex.push(wheel.vertex);
-      wheel_density.push(wheel.density);
-    }
-
     layer.clear();
     cw_initUserCar({
       chassis_density: user_car_json.chassis_density,
       vertex_list: vertex_list,
-      wheelCount: user_car_json.wheel_count,
-      wheel_radius: wheel_radius,
-      wheel_vertex: wheel_vertex,
-      wheel_density: wheel_density
+      wheels_list: user_car_json.wheels_list
     });
   }
 }
 
 function cw_initUserCarWheels(layer) {
-  for (var i = 0; i < user_car_def.wheelCount; i++) {
+  for (var i = 0; i < user_car_def.wheels_list.length; i++) {
     cw_initUserCarWheel(layer, i);
   }
 }
@@ -917,9 +887,9 @@ function cw_initUserCarWheel(layer, wheel_index) {
   var wheel_circle = new Kinetic.Shape({
     id: "user_car_wheel_circle_" + wheel_index,
     sceneFunc: function(context) {
-      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-      var wheel_radius = user_car_def.wheel_radius[wheel_index];
-      var wheel_density = user_car_def.wheel_density[wheel_index];
+      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+      var wheel_radius = user_car_def.wheels_list[wheel_index].radius;
+      var wheel_density = user_car_def.wheels_list[wheel_index].density;
       var wheel_color = Math.round(255 - (255 * (wheel_density - wheelMinDensity)) / wheelMaxDensity);
 
       wheel_circle.fill("rgb(" + wheel_color + "," + wheel_color + "," + wheel_color + ")");
@@ -937,8 +907,8 @@ function cw_initUserCarWheel(layer, wheel_index) {
   layer.add(new Kinetic.Shape({
     id: "user_car_wheel_radius_" + wheel_index,
     sceneFunc: function(context) {
-      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-      var wheel_radius = user_car_def.wheel_radius[wheel_index];
+      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+      var wheel_radius = user_car_def.wheels_list[wheel_index].radius;
 
       context.beginPath();
       context.moveTo(100 * wheel_vertex.x, 100 * wheel_vertex.y);
@@ -953,8 +923,8 @@ function cw_initUserCarWheel(layer, wheel_index) {
   layer.add(new Kinetic.Shape({
     id: "user_car_wheel_density_" + wheel_index,
     sceneFunc: function(context) {
-      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-      var wheel_density = user_car_def.wheel_density[wheel_index];
+      var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+      var wheel_density = user_car_def.wheels_list[wheel_index].density;
 
       context.beginPath();
       context.moveTo(100 * wheel_vertex.x, 100 * wheel_vertex.y);
@@ -968,7 +938,7 @@ function cw_initUserCarWheel(layer, wheel_index) {
 }
 
 function cw_initUserCarWheelHandlers(layer) {
-  for (var i = 0; i < user_car_def.wheelCount; i++) {
+  for (var i = 0; i < user_car_def.wheels_list.length; i++) {
     cw_initUserCarWheelRadiusHandler(layer, i);
     cw_initUserCarWheelVertexHandler(layer, i);
     cw_initUserCarWheelDensityHandler(layer, i);
@@ -976,8 +946,8 @@ function cw_initUserCarWheelHandlers(layer) {
 }
 
 function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-  var wheel_radius = user_car_def.wheel_radius[wheel_index];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+  var wheel_radius = user_car_def.wheels_list[wheel_index].radius;
 
   var wheel_radius_handler = new Kinetic.Circle({
     id: "user_car_wheel_radius_handler_" + wheel_index,
@@ -990,16 +960,16 @@ function cw_initUserCarWheelRadiusHandler(layer, wheel_index) {
   });
 
   wheel_radius_handler.on("dragmove", function() {
-    var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+    var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
     wheel_radius_handler.setY(100 * wheel_vertex.y);
-    user_car_def.wheel_radius[wheel_index] = Math.abs((wheel_radius_handler.x() / 100) - wheel_vertex.x);
+    user_car_def.wheels_list[wheel_index].radius = Math.abs((wheel_radius_handler.x() / 100) - wheel_vertex.x);
   });
 
   layer.add(wheel_radius_handler);
 }
 
 function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
 
   var wheel_vertex_handler = new Kinetic.Circle({
     id: "user_car_wheel_vertex_handler_" + wheel_index,
@@ -1015,10 +985,10 @@ function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
     var wheel_vertex_handler_x = wheel_vertex_handler.x() / 100;
     var wheel_vertex_handler_y = wheel_vertex_handler.y() / 100;
 
-    var first_wheel_vertex = user_car_def.wheel_vertex[wheel_index];
+    var first_wheel_vertex = user_car_def.wheels_list[wheel_index].vertex;
     var final_wheel_vertex = cw_findClosestUserCarVertexIndex(wheel_vertex_handler_x, wheel_vertex_handler_y);
     if (first_wheel_vertex != final_wheel_vertex) {
-      user_car_def.wheel_vertex[wheel_index] = final_wheel_vertex;
+      user_car_def.wheels_list[wheel_index].vertex = final_wheel_vertex;
       cw_redrawUserCarWheelRadiusHandler(layer, wheel_index);
       cw_redrawUserCarWheelDensityHandler(layer, wheel_index);
     }
@@ -1034,8 +1004,8 @@ function cw_initUserCarWheelVertexHandler(layer, wheel_index) {
 }
 
 function cw_initUserCarWheelDensityHandler(layer, wheel_index) {
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-  var wheel_density = user_car_def.wheel_density[wheel_index];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+  var wheel_density = user_car_def.wheels_list[wheel_index].density;
 
   var wheel_density_handler = new Kinetic.Circle({
     id: "user_car_wheel_density_handler_" + wheel_index,
@@ -1048,10 +1018,10 @@ function cw_initUserCarWheelDensityHandler(layer, wheel_index) {
   });
 
   wheel_density_handler.on("dragmove", function() {
-    var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+    var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
 
     wheel_density_handler.setX(100 * wheel_vertex.x);
-    user_car_def.wheel_density[wheel_index] = wheelMaxDensity * ((wheel_density_handler.y() / 100) - wheel_vertex.y);
+    user_car_def.wheels_list[wheel_index].density = wheelMaxDensity * ((wheel_density_handler.y() / 100) - wheel_vertex.y);
   });
 
   layer.add(wheel_density_handler);
@@ -1126,7 +1096,7 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     vertex.x = event.target.x() / 100;
     vertex.y = event.target.y() / 100;
 
-    for (var i = 0; i < user_car_def.wheelCount; ++i) {
+    for (var i = 0; i < user_car_def.wheels_list.length; ++i) {
       cw_redrawUserCarWheelRadiusHandler(layer, i);
       cw_redrawUserCarWheelVertexHandler(layer, i);
       cw_redrawUserCarWheelDensityHandler(layer, i);
@@ -1178,8 +1148,8 @@ function cw_findClosestUserCarVertexIndex(x, y) {
 
 function cw_redrawUserCarWheelRadiusHandler(layer, wheel_index) {
   var wheel_radius_handler = layer.find("#user_car_wheel_radius_handler_" + wheel_index);
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-  var wheel_radius = user_car_def.wheel_radius[wheel_index];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+  var wheel_radius = user_car_def.wheels_list[wheel_index].radius;
   wheel_radius_handler.setX(100 * (wheel_vertex.x + wheel_radius));
   wheel_radius_handler.setY(100 * wheel_vertex.y);
 
@@ -1188,7 +1158,7 @@ function cw_redrawUserCarWheelRadiusHandler(layer, wheel_index) {
 
 function cw_redrawUserCarWheelVertexHandler(layer, wheel_index) {
   var wheel_vertex_handler = layer.find("#user_car_wheel_vertex_handler_" + wheel_index);
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
   wheel_vertex_handler.setX(100 * wheel_vertex.x);
   wheel_vertex_handler.setY(100 * wheel_vertex.y);
 
@@ -1197,8 +1167,8 @@ function cw_redrawUserCarWheelVertexHandler(layer, wheel_index) {
 
 function cw_redrawUserCarWheelDensityHandler(layer, wheel_index) {
   var wheel_density_handler = layer.find("#user_car_wheel_density_handler_" + wheel_index);
-  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheel_vertex[wheel_index]];
-  var wheel_density = user_car_def.wheel_density[wheel_index];
+  var wheel_vertex = user_car_def.vertex_list[user_car_def.wheels_list[wheel_index].vertex];
+  var wheel_density = user_car_def.wheels_list[wheel_index].density;
 
   wheel_density_handler.setX(100 * wheel_vertex.x);
   wheel_density_handler.setY(100 * (wheel_vertex.y + wheel_density / wheelMaxDensity));
