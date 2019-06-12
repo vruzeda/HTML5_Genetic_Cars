@@ -394,7 +394,18 @@ function cw_generationZero() {
 function cw_materializeGeneration() {
   cw_carArray = new Array();
   for (var k = 0; k < generationSize; k++) {
-    cw_carArray.push(new cw_Car(cw_carGeneration[k]));
+    var car;
+    try {
+      car = new cw_Car(cw_carGeneration[k]);
+    } catch {
+      console.error("Failed to generate car " + k + ", creating a new one in its place");
+      cw_carGeneration[k] = {
+        ...cw_carGeneration[k],
+        ...cw_createRandomCar(cw_carGeneration[k].wheels_list.length)
+      };
+      car = new cw_Car(cw_carGeneration[k]);
+    }
+    cw_carArray.push(car);
   }
 }
 
@@ -479,22 +490,21 @@ function cw_makeChild(car_def1, car_def2) {
   var curparent = 0;
 
   // Inheriting vertex
-  var vertex_count = Math.floor((parents[0].vertex_list.length + parents[1].vertex_list.length) / 2);
+  var vertex_count = Math.round((parents[0].vertex_list.length + parents[1].vertex_list.length) / 2);
   newCarDef.vertex_list = new Array(vertex_count);
 
   for (var i = 0; i < newCarDef.vertex_list.length; i++) {
     curparent = cw_chooseParent(curparent, i + 4);
-    var parentVertexIndex = Math.floor(i * parents[curparent].vertex_list.length / newCarDef.vertex_list.length);
+    var parentVertexes = parents[curparent].vertex_list;
 
-    // We can't have two adjacent vertexes with the same coordinates
-    if (i > 0 && newCarDef.vertex_list[i - 1].parent === curparent && newCarDef.vertex_list[i - 1].parentVertexIndex === parentVertexIndex) {
-      curparent = (curparent + 1) % 2;
-      parentVertexIndex = Math.floor(i * parents[curparent].vertex_list.length / newCarDef.vertex_list.length);
-    }
+    var parentVertexRatio = parentVertexes.length / newCarDef.vertex_list.length;
+    var preParentVertex = parentVertexes[Math.floor(i * parentVertexRatio)];
+    var posParentVertex = parentVertexes[Math.ceil(i * parentVertexRatio) % parentVertexes.length];
 
-    newCarDef.vertex_list[i] = parents[curparent].vertex_list[parentVertexIndex];
-    newCarDef.vertex_list[i].parent = curparent;
-    newCarDef.vertex_list[i].parentVertexIndex = parentVertexIndex;
+    var x = preParentVertex.x + (posParentVertex.x - preParentVertex.x) * i / newCarDef.vertex_list.length;
+    var y = preParentVertex.y + (posParentVertex.y - preParentVertex.y) * i / newCarDef.vertex_list.length;
+
+    newCarDef.vertex_list[i] = { x, y };
   }
 
   // Inheriting wheels
