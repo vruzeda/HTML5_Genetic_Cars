@@ -397,8 +397,8 @@ function cw_materializeGeneration() {
     var car;
     try {
       car = new cw_Car(cw_carGeneration[k]);
-    } catch {
-      console.error("Failed to generate car " + k + ", creating a new one in its place");
+    } catch (exception) {
+      console.error("Failed to generate car " + k + ", creating a new one in its place", exception);
       cw_carGeneration[k] = {
         ...cw_carGeneration[k],
         ...cw_createRandomCar(cw_carGeneration[k].wheels_list.length)
@@ -489,8 +489,13 @@ function cw_makeChild(car_def1, car_def2) {
   var parents = [car_def1, car_def2];
   var curparent = 0;
 
-  // Inheriting vertex
-  var vertex_count = Math.round((parents[0].vertex_list.length + parents[1].vertex_list.length) / 2);
+  // Parent genetics ratios
+  parents[0].score = cw_carScores[parents[0].index].v;
+  parents[1].score = cw_carScores[parents[1].index].v;
+  totalParentScore = parents[0].score + parents[1].score;
+
+  // Inheriting vertexes
+  var vertex_count = Math.round((parents[0].score * parents[0].vertex_list.length + parents[1].score * parents[1].vertex_list.length) / totalParentScore);
   newCarDef.vertex_list = new Array(vertex_count);
 
   for (var i = 0; i < newCarDef.vertex_list.length; i++) {
@@ -508,7 +513,7 @@ function cw_makeChild(car_def1, car_def2) {
   }
 
   // Inheriting wheels
-  var wheel_count = Math.floor((parents[0].wheels_list.length + parents[1].wheels_list.length) / 2);
+  var wheel_count = Math.floor((parents[0].score * parents[0].wheels_list.length + parents[1].score * parents[1].wheels_list.length) / totalParentScore);
   newCarDef.wheels_list = Array.from(new Array(wheel_count), () => new Object());
 
   for (var i = 0; i < newCarDef.wheels_list.length; i++) {
