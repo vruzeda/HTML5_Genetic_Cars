@@ -437,7 +437,8 @@ function cw_nextGeneration() {
     v: cw_carScores[0].v,
     x: cw_carScores[0].x,
     y: cw_carScores[0].y,
-    y2: cw_carScores[0].y2
+    y2: cw_carScores[0].y2,
+    car_def: cw_carScores[0].car_def
   });
   plot_graphs();
   for (var k = 0; k < number_user_cars; k++) {
@@ -902,8 +903,19 @@ function cw_initUserCar(userCarDef) {
 
   layer.draw();
 
+  document.getElementById("copy_champion_car").onclick = cw_copyChampionCar(layer);
   document.getElementById("serialize_user_car").onclick = cw_serializeUserCar();
   document.getElementById("deserialize_user_car").onclick = cw_deserializeUserCar(layer);
+}
+
+function cw_copyChampionCar(layer) {
+  return function() {
+    if (cw_topScores.length > 0) {
+      layer.clear();
+      user_car_def = JSON.parse(JSON.stringify(cw_topScores[cw_topScores.length - 1].car_def));
+      cw_initUserCar();
+    }
+  };
 }
 
 function cw_serializeUserCar() {
