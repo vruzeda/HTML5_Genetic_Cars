@@ -123,8 +123,6 @@ cw_Car.prototype.chassis = null;
 cw_Car.prototype.wheels = [];
 
 cw_Car.prototype.__constructor = function(car_def) {
-  cw_sortCarVertexes(car_def);
-
   this.velocityIndex = 0;
   this.health = max_car_health;
   this.maxPosition = 0;
@@ -839,13 +837,11 @@ var user_car_handler_color_chassis_vertex = "#ff0000";
 var user_car_handler_color_chassis_density = "#0000ff";
 
 function cw_initRandomUserCar() {
-  cw_initUserCar(cw_createRandomCar(2));
+  user_car_def = cw_createRandomCar(2);
+  cw_initUserCar();
 }
 
 function cw_initUserCar(userCarDef) {
-  user_car_def = userCarDef;
-  cw_sortCarVertexes(user_car_def);
-
   var stage = new Kinetic.Stage({
     container: "user_car_container",
     width: 800,
@@ -866,11 +862,11 @@ function cw_initUserCar(userCarDef) {
 
   layer.draw();
 
-  document.getElementById("serialize_user_car").onclick = cw_serializeUserCar(layer);
+  document.getElementById("serialize_user_car").onclick = cw_serializeUserCar();
   document.getElementById("deserialize_user_car").onclick = cw_deserializeUserCar(layer);
 }
 
-function cw_serializeUserCar(layer) {
+function cw_serializeUserCar() {
   return function() {
     document.getElementById("user_car_json").value = JSON.stringify(user_car_def);
   };
@@ -879,7 +875,9 @@ function cw_serializeUserCar(layer) {
 function cw_deserializeUserCar(layer) {
   return function() {
     layer.clear();
-    cw_initUserCar(JSON.parse(document.getElementById("user_car_json").value));
+    user_car_def = JSON.parse(document.getElementById("user_car_json").value);
+    cw_sortCarVertexes(user_car_def);
+    cw_initUserCar();
   };
 }
 
@@ -1102,8 +1100,6 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     vertex.x = event.target.x() / 100;
     vertex.y = event.target.y() / 100;
 
-    cw_sortCarVertexes(user_car_def);
-
     for (var i = 0; i < user_car_def.wheels_list.length; ++i) {
       cw_redrawUserCarWheelRadiusHandler(layer, i);
       cw_redrawUserCarWheelVertexHandler(layer, i);
@@ -1155,12 +1151,46 @@ function cw_findClosestUserCarVertexIndex(x, y) {
 }
 
 function cw_sortCarVertexes(car_def) {
-  car_def.vertex_list.sort(function(vertex1, vertex2) {
+  car_def.vertex_list = cw_rearrangeVertexes(car_def.vertex_list);
+  car_def.wheels_list = car_def.wheels_list.map((wheel) => {
+    var wheelVertex = car_def.vertex_list.find((vertex) => vertex.index === wheel.vertex)
+    if (!wheelVertex) {
+      wheelVertex = car_def.vertex_list[Math.floor(Math.random() * car_def.vertex_list.length) % car_def.vertex_list.length];
+    }
+    return {
+      ...wheel,
+      vertex: wheelVertex.index,
+    }
+  });
+}
+
+function cw_rearrangeVertexes(vertexes) {
+  var centroid = vertexes.reduce((centroid, vertex) => ({
+    x: centroid.x + vertex.x / vertexes.length,
+    y: centroid.y + vertex.y / vertexes.length,
+  }), { x: 0, y: 0 });
+
+  return vertexes.map((vertex, index) => ({
+    x: vertex.x - centroid.x,
+    y: vertex.y - centroid.y,
+    index,
+  })).filter((vertex) => (
+    // The center can't be one of the vertex
+    vertex.x !== 0 || vertex.y !== 0
+  )).sort((vertex1, vertex2) => {
     var orientation = cw_getVertexesOrientation(vertex1, vertex2);
     if (orientation === 0) {
-      return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2)  ? 1 : -1;
+      return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2) ? 1 : -1;
     }
     return (orientation === 2) ? -1 : 1;
+  }).filter((vertex1, index, rearrangedVertexes) => {
+    if (index === 0) {
+      return true;
+    }
+    
+    // Colinear points can't be vertexes
+    var vertex0 = rearrangedVertexes[index - 1];
+    return (vertex0.y - vertex1.y) / (vertex0.x - vertex1.x) != vertex1.y / vertex1.x;
   });
 }
 
