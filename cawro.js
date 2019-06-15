@@ -358,7 +358,7 @@ function cw_createRandomCar(wheel_count) {
     left.splice(indexOfNext, 1);
   }
 
-  return car_def;
+  return cw_sortCarVertexes(car_def);
 }
 
 /* === END Car ============================================================= */
@@ -444,7 +444,7 @@ function cw_nextGeneration() {
     newborn.is_user = false;
     newborn.is_elite = false;
     newborn.index = k;
-    newGeneration.push(newborn);
+    newGeneration.push(cw_sortCarVertexes(newborn));
   }
   cw_carScores = new Array();
   cw_carGeneration = newGeneration;
@@ -875,8 +875,7 @@ function cw_serializeUserCar() {
 function cw_deserializeUserCar(layer) {
   return function() {
     layer.clear();
-    user_car_def = JSON.parse(document.getElementById("user_car_json").value);
-    cw_sortCarVertexes(user_car_def);
+    user_car_def = cw_sortCarVertexes(JSON.parse(document.getElementById("user_car_json").value));
     cw_initUserCar();
   };
 }
@@ -1151,17 +1150,23 @@ function cw_findClosestUserCarVertexIndex(x, y) {
 }
 
 function cw_sortCarVertexes(car_def) {
-  car_def.vertex_list = cw_rearrangeVertexes(car_def.vertex_list);
-  car_def.wheels_list = car_def.wheels_list.map((wheel) => {
-    var wheelVertex = car_def.vertex_list.find((vertex) => vertex.index === wheel.vertex)
+  var vertex_list = cw_rearrangeVertexes(car_def.vertex_list);
+  var wheels_list = car_def.wheels_list.map((wheel) => {
+    var wheelVertex = vertex_list.find((vertex) => vertex.index === wheel.vertex)
     if (!wheelVertex) {
-      wheelVertex = car_def.vertex_list[Math.floor(Math.random() * car_def.vertex_list.length) % car_def.vertex_list.length];
+      wheelVertex = vertex_list[Math.floor(Math.random() * vertex_list.length) % vertex_list.length];
     }
     return {
       ...wheel,
       vertex: wheelVertex.index,
     }
   });
+
+  return {
+    ...car_def,
+    vertex_list,
+    wheels_list,
+  };
 }
 
 function cw_rearrangeVertexes(vertexes) {
