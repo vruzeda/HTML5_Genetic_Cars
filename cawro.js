@@ -123,6 +123,8 @@ cw_Car.prototype.chassis = null;
 cw_Car.prototype.wheels = [];
 
 cw_Car.prototype.__constructor = function(car_def) {
+  cw_sortCarVertexes(car_def);
+
   this.velocityIndex = 0;
   this.health = max_car_health;
   this.maxPosition = 0;
@@ -842,6 +844,7 @@ function cw_initRandomUserCar() {
 
 function cw_initUserCar(userCarDef) {
   user_car_def = userCarDef;
+  cw_sortCarVertexes(user_car_def);
 
   var stage = new Kinetic.Stage({
     container: "user_car_container",
@@ -1099,6 +1102,8 @@ function cw_initUserCarVertexHandler(layer, vertex_index) {
     vertex.x = event.target.x() / 100;
     vertex.y = event.target.y() / 100;
 
+    cw_sortCarVertexes(user_car_def);
+
     for (var i = 0; i < user_car_def.wheels_list.length; ++i) {
       cw_redrawUserCarWheelRadiusHandler(layer, i);
       cw_redrawUserCarWheelVertexHandler(layer, i);
@@ -1147,6 +1152,28 @@ function cw_findClosestUserCarVertexIndex(x, y) {
     }
 
     return closest_vertex_index;
+}
+
+function cw_sortCarVertexes(car_def) {
+  car_def.vertex_list.sort(function(vertex1, vertex2) {
+    var orientation = cw_getVertexesOrientation(vertex1, vertex2);
+    if (orientation === 0) {
+      return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2)  ? 1 : -1;
+    }
+    return (orientation === 2) ? -1 : 1;
+  });
+}
+
+function cw_getVertexesOrientation(vertex1, vertex2) {
+  var crossProduct = vertex1.y * vertex2.x - vertex1.x * vertex2.y;
+  if (crossProduct === 0) {
+    return 0;
+  }
+  return (crossProduct > 0) ? 1 : 2;
+}
+
+function cw_getModulusSquared(vertex) {
+  return vertex.x * vertex.x + vertex.y * vertex.y;
 }
 
 function cw_redrawUserCarWheelRadiusHandler(layer, wheel_index) {
