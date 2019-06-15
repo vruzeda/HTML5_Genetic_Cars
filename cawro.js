@@ -531,6 +531,13 @@ function cw_makeChild(car_def1, car_def2) {
   parents[1].score = cw_carScores[parents[1].index].v;
   totalParentScore = parents[0].score + parents[1].score;
 
+  // If both parents don't have scores, just use the average
+  if (totalParentScore === 0) {
+    parents[0].score = 1;
+    parents[1].score = 1;
+    totalParentScore = 2;
+  }
+
   // Inheriting vertexes
   var vertex_count = Math.round((parents[0].score * parents[0].vertex_list.length + parents[1].score * parents[1].vertex_list.length) / totalParentScore);
   newCarDef.vertex_list = new Array(vertex_count);
