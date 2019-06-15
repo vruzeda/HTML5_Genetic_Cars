@@ -432,13 +432,18 @@ function cw_nextGeneration() {
   var newGeneration = new Array();
   var newborn;
   var champions = cw_getChampions();
+
+  var topScoringCar = cw_carScores.find((carScore) => (
+    evolve_with_user_cars || !carScore.car_def.is_user
+  ));
+
   cw_topScores.push({
     i: gen_counter,
-    v: cw_carScores[0].v,
-    x: cw_carScores[0].x,
-    y: cw_carScores[0].y,
-    y2: cw_carScores[0].y2,
-    car_def: cw_carScores[0].car_def
+    v: topScoringCar.v,
+    x: topScoringCar.x,
+    y: topScoringCar.y,
+    y2: topScoringCar.y2,
+    car_def: topScoringCar.car_def
   });
   plot_graphs();
   for (var k = 0; k < number_user_cars; k++) {
@@ -1390,6 +1395,15 @@ function cw_newRound() {
   cw_setCameraTarget(-1);
 }
 
+function cw_nextRound() {
+  for (var i = 0; i < cw_carArray.length; ++i) {
+    if (cw_carArray[i].alive) {
+      cw_carArray[i].kill();
+    }
+  }
+  cw_newRound();
+}
+
 function cw_startSimulation() {
   cw_runningInterval = setInterval(simulationStep, Math.round(1000 / box2dfps));
   cw_drawInterval = setInterval(cw_drawScreen, Math.round(1000 / screenfps));
@@ -1398,30 +1412,6 @@ function cw_startSimulation() {
 function cw_stopSimulation() {
   clearInterval(cw_runningInterval);
   clearInterval(cw_drawInterval);
-}
-
-function cw_kill() {
-  var avgspeed = (myCar.maxPosition / myCar.frames) * box2dfps;
-  var position = myCar.maxPosition;
-  var score = position + avgspeed;
-  document.getElementById("cars").innerHTML += Math.round(position * 100) / 100 + "m + " + " " + Math.round(avgspeed * 100) / 100 + " m/s = " + Math.round(score * 100) / 100 + "pts<br />";
-  ghost_compare_to_replay(replay, ghost, score);
-  cw_carScores.push({
-    i: current_car_index,
-    v: score,
-    s: avgspeed,
-    x: position,
-    y: myCar.maxPositiony,
-    y2: myCar.minPositiony
-  });
-  current_car_index++;
-  cw_killCar();
-  if (current_car_index >= generationSize) {
-    cw_nextGeneration();
-    current_car_index = 0;
-  }
-  myCar = cw_createNextCar();
-  last_drawn_tile = 0;
 }
 
 function cw_resetPopulation() {
