@@ -417,7 +417,7 @@ function cw_materializeGeneration() {
     try {
       car = new cw_Car(cw_carGeneration[k]);
     } catch (exception) {
-      console.error("Failed to generate car " + k + ", creating a new one in its place", exception);
+      console.error(`Failed to generate car ${k} with definition ${JSON.stringify(cw_carGeneration[k])}, creating a new one in its place`, exception);
       cw_carGeneration[k] = {
         ...cw_carGeneration[k],
         ...cw_createRandomCar(cw_carGeneration[k].wheels_list.length)
