@@ -42,6 +42,7 @@ var cw_graphAverage = new Array();
 
 var number_user_cars = 1;
 var evolve_with_user_cars = false;
+var number_random_cars = 1;
 var gen_champions = 1;
 var gen_parentality = 0.2;
 var gen_mutation = 0.05;
@@ -133,6 +134,7 @@ cw_Car.prototype.__constructor = function(car_def) {
   this.alive = true;
   this.is_elite = car_def.is_elite;
   this.is_user = car_def.is_user;
+  this.is_random = car_def.is_random;
   this.healthBar = document.getElementById("health" + car_def.index).style;
   this.healthBarText = document.getElementById("health" + car_def.index).nextSibling.nextSibling;
   this.healthBarText.innerHTML = car_def.index;
@@ -145,6 +147,10 @@ cw_Car.prototype.__constructor = function(car_def) {
   } else if (this.is_user) {
     this.healthBar.backgroundColor = "#4c4";
     this.minimapmarker.style.borderLeft = "1px solid #4c4";
+    this.minimapmarker.innerHTML = car_def.index;
+  } else if (this.is_random) {
+    this.healthBar.backgroundColor = "#cc0";
+    this.minimapmarker.style.borderLeft = "1px solid #cc0";
     this.minimapmarker.innerHTML = car_def.index;
   } else {
     this.healthBar.backgroundColor = "#c44";
@@ -371,13 +377,26 @@ function cw_createRandomCar(wheel_count) {
 function cw_generationZero() {
   for (var k = 0; k < number_user_cars; k++) {
     var car_def = cw_createUserCar();
-    car_def.index = k;
+    car_def.index = cw_carGeneration.length;
     car_def.is_user = true;
+    car_def.is_random = false;
+    car_def.is_elite = false;
     cw_carGeneration.push(car_def);
   }
-  for (var k = number_user_cars; k < generationSize; k++) {
+  while (cw_carGeneration.length < generationSize - number_random_cars) {
     var car_def = cw_createRandomCar(2);
-    car_def.index = k;
+    car_def.index = cw_carGeneration.length;
+    car_def.is_user = false;
+    car_def.is_random = false;
+    car_def.is_elite = false;
+    cw_carGeneration.push(car_def);
+  }
+  for (var k = 0; k < number_random_cars; k++) {
+    var car_def = cw_createRandomCar(2);
+    car_def.index = cw_carGeneration.length;
+    car_def.is_user = false;
+    car_def.is_random = true;
+    car_def.is_elite = false;
     cw_carGeneration.push(car_def);
   }
   gen_counter = 0;
@@ -423,17 +442,20 @@ function cw_nextGeneration() {
   plot_graphs();
   for (var k = 0; k < number_user_cars; k++) {
     var car_def = cw_createUserCar();
-    car_def.index = k;
     car_def.is_user = true;
+    car_def.is_random = false;
+    car_def.is_elite = false;
+    car_def.index = newGeneration.length;
     newGeneration.push(car_def);
   }
   for (var k = 0; k < gen_champions; k++) {
     champions[k].car_def.is_user = false;
+    champions[k].car_def.is_random = false;
     champions[k].car_def.is_elite = true;
-    champions[k].car_def.index = number_user_cars + k;
+    champions[k].car_def.index = newGeneration.length;
     newGeneration.push(champions[k].car_def);
   }
-  for (var k = number_user_cars + gen_champions; k < generationSize; k++) {
+  while (newGeneration.length < generationSize - number_random_cars) {
     var parent1 = cw_getParents();
     var parent2 = parent1;
     while (parent2 === parent1) {
@@ -442,9 +464,18 @@ function cw_nextGeneration() {
     var newborn = cw_makeChild(champions[parent1].car_def, champions[parent2].car_def);
     newborn = cw_mutate(newborn);
     newborn.is_user = false;
+    newborn.is_random = false;
     newborn.is_elite = false;
-    newborn.index = k;
+    newborn.index = newGeneration.length;
     newGeneration.push(cw_sortCarVertexes(newborn));
+  }
+  for (var k = 0; k < number_random_cars; k++) {
+    var car_def = cw_createRandomCar(2);
+    car_def.is_user = false;
+    car_def.is_random = true;
+    car_def.is_elite = false;
+    car_def.index = newGeneration.length;
+    newGeneration.push(car_def);
   }
   cw_carScores = new Array();
   cw_carGeneration = newGeneration;
@@ -733,6 +764,10 @@ function cw_drawCars() {
       ctx.strokeStyle = "#4c4";
       //ctx.fillStyle = "#dfd";
       ctx.fillStyle = "hsl(120, 50%, " + densitycolor + ")";
+    } else if (myCar.is_random) {
+      ctx.strokeStyle = "#cc0";
+      //ctx.fillStyle = "#dd0";
+      ctx.fillStyle = "hsl(60, 100%, " + densitycolor + ")";
     } else {
       ctx.strokeStyle = "#c44";
       //ctx.fillStyle = "#fdd";
@@ -1064,7 +1099,7 @@ function cw_initUserCarChassisPart(layer, vertex_index) {
       var vertex_1 = user_car_def.vertex_list[(vertex_index + 1) % user_car_def.vertex_list.length];
       var chassis_color = Math.round(100 - (70 * ((user_car_def.chassis_density - chassisMinDensity) / chassisMaxDensity))).toString() + "%";
 
-      chassis_part.fill("hsla(120, 50%, " + chassis_color + ", 0.7)");
+      chassis_part.fill("hsl(120, 50%, " + chassis_color + ")");
 
       context.beginPath();
       context.moveTo(0, 0);
