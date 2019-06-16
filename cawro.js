@@ -258,14 +258,13 @@ cw_Car.prototype.checkDeath = function() {
   }
 }
 
-function cw_createChassisPart(body, vertex1, vertex2, density) {
+function cw_createChassisPart(body, vertex1, vertex2) {
   var vertex_list = new Array();
   vertex_list.push(vertex1);
   vertex_list.push(vertex2);
   vertex_list.push(b2Vec2.Make(0, 0));
   var fix_def = new b2FixtureDef();
   fix_def.shape = new b2PolygonShape();
-  fix_def.density = density;
   fix_def.friction = 10;
   fix_def.restitution = 0.2;
   fix_def.filter.groupIndex = -1;
@@ -284,6 +283,11 @@ function cw_createChassis(vertex_list, density) {
   for (var i = 0; i < vertex_list.length; ++i) {
     cw_createChassisPart(body, vertex_list[i], vertex_list[(i + 1) % vertex_list.length], density);
   }
+
+  for (var fixture = body.GetFixtureList(); fixture; fixture = fixture.GetNext()) {
+    fixture.SetDensity(density);
+  }
+  body.ResetMassData();
 
   body.vertex_list = vertex_list;
 
@@ -1252,14 +1256,9 @@ function cw_rearrangeVertexes(vertexes) {
       return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2) ? 1 : -1;
     }
     return (orientation === 2) ? -1 : 1;
-  }).filter((vertex1, index, rearrangedVertexes) => {
-    if (index === 0) {
-      return true;
-    }
-    
-    // Colinear points can't be vertexes
-    var vertex0 = rearrangedVertexes[index - 1];
-    return (vertex0.y - vertex1.y) / (vertex0.x - vertex1.x) != vertex1.y / vertex1.x;
+  }).filter((vertex1, index, vertexes) => {
+    var vertex2 = vertexes[(index + 1) % vertexes.length];
+    return cw_getVertexesOrientation(vertex1, vertex2) !== 0;
   });
 }
 
