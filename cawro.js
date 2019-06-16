@@ -368,7 +368,7 @@ function cw_createRandomCar(wheel_count) {
     left.splice(indexOfNext, 1);
   }
 
-  return cw_sortCarVertexes(car_def);
+  return cw_sortCarVertices(car_def);
 }
 
 /* === END Car ============================================================= */
@@ -476,7 +476,7 @@ function cw_nextGeneration() {
     newborn.is_random = false;
     newborn.is_elite = false;
     newborn.index = newGeneration.length;
-    newGeneration.push(cw_sortCarVertexes(newborn));
+    newGeneration.push(cw_sortCarVertices(newborn));
   }
   for (var k = 0; k < number_random_cars; k++) {
     var car_def = cw_createRandomCar(2);
@@ -541,17 +541,17 @@ function cw_makeChild(car_def1, car_def2) {
     totalParentScore = 2;
   }
 
-  // Inheriting vertexes
+  // Inheriting vertices
   var vertex_count = Math.round((parents[0].score * parents[0].vertex_list.length + parents[1].score * parents[1].vertex_list.length) / totalParentScore);
   newCarDef.vertex_list = new Array(vertex_count);
 
   for (var i = 0; i < newCarDef.vertex_list.length; i++) {
     curparent = cw_chooseParent(curparent, i + 4);
-    var parentVertexes = parents[curparent].vertex_list;
+    var parentVertices = parents[curparent].vertex_list;
 
-    var parentVertexRatio = parentVertexes.length / newCarDef.vertex_list.length;
-    var preParentVertex = parentVertexes[Math.floor(i * parentVertexRatio)];
-    var posParentVertex = parentVertexes[Math.ceil(i * parentVertexRatio) % parentVertexes.length];
+    var parentVertexRatio = parentVertices.length / newCarDef.vertex_list.length;
+    var preParentVertex = parentVertices[Math.floor(i * parentVertexRatio)];
+    var posParentVertex = parentVertices[Math.ceil(i * parentVertexRatio) % parentVertices.length];
 
     var x = preParentVertex.x + (posParentVertex.x - preParentVertex.x) * i / newCarDef.vertex_list.length;
     var y = preParentVertex.y + (posParentVertex.y - preParentVertex.y) * i / newCarDef.vertex_list.length;
@@ -940,7 +940,7 @@ function cw_serializeUserCar() {
 function cw_deserializeUserCar(layer) {
   return function() {
     layer.clear();
-    user_car_def = cw_sortCarVertexes(JSON.parse(document.getElementById("user_car_json").value));
+    user_car_def = cw_sortCarVertices(JSON.parse(document.getElementById("user_car_json").value));
     cw_initUserCar();
   };
 }
@@ -1214,8 +1214,8 @@ function cw_findClosestUserCarVertexIndex(x, y) {
     return closest_vertex_index;
 }
 
-function cw_sortCarVertexes(car_def) {
-  var vertex_list = cw_rearrangeVertexes(car_def.vertex_list);
+function cw_sortCarVertices(car_def) {
+  var vertex_list = cw_rearrangeVertices(car_def.vertex_list);
   var wheels_list = car_def.wheels_list.map((wheel) => {
     var wheelVertexIndex;
     for (var i = 0; i < vertex_list.length && !wheelVertexIndex; ++i) {
@@ -1242,36 +1242,36 @@ function cw_sortCarVertexes(car_def) {
   };
 }
 
-function cw_rearrangeVertexes(vertexes) {
-  var centroid = vertexes.reduce((centroid, vertex) => ({
-    x: centroid.x + vertex.x / vertexes.length,
-    y: centroid.y + vertex.y / vertexes.length,
+function cw_rearrangeVertices(vertices) {
+  var centroid = vertices.reduce((centroid, vertex) => ({
+    x: centroid.x + vertex.x / vertices.length,
+    y: centroid.y + vertex.y / vertices.length,
   }), { x: 0, y: 0 });
 
-  var rearrangedVertexes = vertexes.map((vertex, index) => ({
+  var rearrangedVertices = vertices.map((vertex, index) => ({
     x: vertex.x - centroid.x,
     y: vertex.y - centroid.y,
     index,
   })).sort((vertex1, vertex2) => {
-    var orientation = cw_getVertexesOrientation(vertex1, vertex2);
+    var orientation = cw_getVerticesOrientation(vertex1, vertex2);
     if (orientation === 0) {
       return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2) ? 1 : -1;
     }
     return (orientation === 2) ? -1 : 1;
   });
 
-  var rearrangedVertexesLength;
+  var rearrangedVerticesLength;
   do {
-    rearrangedVertexesLength = rearrangedVertexes.length;
-    rearrangedVertexes = rearrangedVertexes.filter((vertex1, index, vertexes) => {
+    rearrangedVerticesLength = rearrangedVertices.length;
+    rearrangedVertices = rearrangedVertices.filter((vertex1, index, vertices) => {
       var is_center = vertex1.x === 0 && vertex1.y === 0;
       if (is_center) {
         console.error(`Filtering out vertex ${vertex1.index} because it's the center`);
         return false;
       }
 
-      var vertex2 = vertexes[(index + 1) % vertexes.length];
-      var is_colinear = cw_getVertexesOrientation(vertex1, vertex2) === 0;
+      var vertex2 = vertices[(index + 1) % vertices.length];
+      var is_colinear = cw_getVerticesOrientation(vertex1, vertex2) === 0;
       if (is_colinear) {
         console.error(`Filtering out vertex ${vertex1.index} because it's colinear`);
         return false;
@@ -1279,12 +1279,12 @@ function cw_rearrangeVertexes(vertexes) {
 
       return true;
     });
-  } while (rearrangedVertexesLength !== rearrangedVertexes.length);
+  } while (rearrangedVerticesLength !== rearrangedVertices.length);
 
-  return rearrangedVertexes;
+  return rearrangedVertices;
 }
 
-function cw_getVertexesOrientation(vertex1, vertex2) {
+function cw_getVerticesOrientation(vertex1, vertex2) {
   var crossProduct = vertex1.y * vertex2.x - vertex1.x * vertex2.y;
   if (crossProduct === 0) {
     return 0;
