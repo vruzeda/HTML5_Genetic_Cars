@@ -1217,13 +1217,21 @@ function cw_findClosestUserCarVertexIndex(x, y) {
 function cw_sortCarVertexes(car_def) {
   var vertex_list = cw_rearrangeVertexes(car_def.vertex_list);
   var wheels_list = car_def.wheels_list.map((wheel) => {
-    var wheelVertex = vertex_list.find((vertex) => vertex.index === wheel.vertex)
-    if (!wheelVertex) {
-      wheelVertex = vertex_list[Math.floor(Math.random() * vertex_list.length) % vertex_list.length];
+    var wheelVertexIndex;
+    for (var i = 0; i < vertex_list.length && !wheelVertexIndex; ++i) {
+      var vertex = vertex_list[i];
+      if (vertex.index === wheel.vertex) {
+        wheelVertexIndex = i;
+      }
     }
+
+    if (!wheelVertexIndex) {
+      wheelVertexIndex = Math.floor(Math.random() * vertex_list.length) % vertex_list.length;
+    }
+
     return {
       ...wheel,
-      vertex: wheelVertex.index,
+      vertex: wheelVertexIndex,
     }
   });
 
@@ -1240,23 +1248,40 @@ function cw_rearrangeVertexes(vertexes) {
     y: centroid.y + vertex.y / vertexes.length,
   }), { x: 0, y: 0 });
 
-  return vertexes.map((vertex, index) => ({
+  var rearrangedVertexes = vertexes.map((vertex, index) => ({
     x: vertex.x - centroid.x,
     y: vertex.y - centroid.y,
     index,
-  })).filter((vertex) => (
-    // The center can't be one of the vertex
-    vertex.x !== 0 || vertex.y !== 0
-  )).sort((vertex1, vertex2) => {
+  })).sort((vertex1, vertex2) => {
     var orientation = cw_getVertexesOrientation(vertex1, vertex2);
     if (orientation === 0) {
       return cw_getModulusSquared(vertex1) < cw_getModulusSquared(vertex2) ? 1 : -1;
     }
     return (orientation === 2) ? -1 : 1;
-  }).filter((vertex1, index, vertexes) => {
-    var vertex2 = vertexes[(index + 1) % vertexes.length];
-    return cw_getVertexesOrientation(vertex1, vertex2) !== 0;
   });
+
+  var rearrangedVertexesLength;
+  do {
+    rearrangedVertexesLength = rearrangedVertexes.length;
+    rearrangedVertexes = rearrangedVertexes.filter((vertex1, index, vertexes) => {
+      var is_center = vertex1.x === 0 && vertex1.y === 0;
+      if (is_center) {
+        console.error(`Filtering out vertex ${vertex1.index} because it's the center`);
+        return false;
+      }
+
+      var vertex2 = vertexes[(index + 1) % vertexes.length];
+      var is_colinear = cw_getVertexesOrientation(vertex1, vertex2) === 0;
+      if (is_colinear) {
+        console.error(`Filtering out vertex ${vertex1.index} because it's colinear`);
+        return false;
+      }
+
+      return true;
+    });
+  } while (rearrangedVertexesLength !== rearrangedVertexes.length);
+
+  return rearrangedVertexes;
 }
 
 function cw_getVertexesOrientation(vertex1, vertex2) {
